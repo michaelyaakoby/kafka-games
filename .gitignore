@@ -1,0 +1,25 @@
+# Mac files
+.DS_Store
+
+# Java files
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven files
+target/
+
+# Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
+!/.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ
+.idea/
+*.iml
+
+# Eclipse
+.classpath
+.project
+
+# Jrebel
+rebel.xml
