@@ -1,34 +1,23 @@
 package michael.kafka.games;
 
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import michael.kafka.games.avro.DeviceController;
 import michael.kafka.games.avro.InverterTelemetry;
 import michael.kafka.games.avro.IrradianceSensorTelemetry;
-import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.streams.KafkaStreams;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.StreamSupport;
 
+import static michael.kafka.games.TelemetrySiteEnricher.getSpecificAvroSerde;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -44,34 +33,19 @@ public class GenericRecordKafkaStreamTest extends KafkaTestBase {
 
         adminCreateTopics(INPUT_TOPIC, OUTPUT_TOPIC);
 
-        Serde<DeviceController> deviceControllerSerde = getSpecificAvroSerde(false);
-        Serde<Telemetry> telemetrySerde = getSpecificAvroSerde(false);
+        Serde<DeviceController> deviceControllerSerde = getSpecificAvroSerde(mockSchemaRegistryClient, false);
+        Serde<Telemetry> telemetrySerde = getSpecificAvroSerde(mockSchemaRegistryClient, false);
 
-        final StreamsBuilder builder = new StreamsBuilder();
+        TelemetrySiteEnricher telemetrySiteEnricher = new TelemetrySiteEnricher(
+            mockSchemaRegistryClient,
+            INPUT_TOPIC,
+            OUTPUT_TOPIC,
+            DEVICE_CONTROLLER_TABLE_TOPIC
+        );
 
-        ValueJoiner<Telemetry, DeviceController, Telemetry> siteEnricherJoiner = (telemetry, deviceController) -> {
-            if (deviceController != null) {
-                telemetry.setSiteId(deviceController.getSiteId());
-            }
-            return telemetry;
-        };
+        System.out.print(telemetrySiteEnricher.getTopology().describe());
 
-        KTable<String, DeviceController> deviceControllerKTable = builder
-            .table(DEVICE_CONTROLLER_TABLE_TOPIC, Materialized.with(stringSerde, deviceControllerSerde));
-
-        builder.stream(INPUT_TOPIC, Consumed.with(stringSerde, telemetrySerde))
-            .selectKey((key, value) -> value.getDeviceControllerSerial().toString())
-            .leftJoin(
-                deviceControllerKTable,
-                siteEnricherJoiner,
-                Joined.with(stringSerde, telemetrySerde, deviceControllerSerde)
-            )
-            .to(OUTPUT_TOPIC, Produced.with(stringSerde, telemetrySerde));
-
-        Topology topology = builder.build();
-        System.out.print(topology.describe());
-
-        try (final KafkaStreams streams = new KafkaStreams(builder.build(), getStreamsProperties("telemetry-enricher"))) {
+        try (final KafkaStreams streams = new KafkaStreams(telemetrySiteEnricher.getTopology(), getStreamsProperties("telemetry-enricher"))) {
             streams.cleanUp();
             streams.start();
 
@@ -147,25 +121,4 @@ public class GenericRecordKafkaStreamTest extends KafkaTestBase {
         }
     }
 
-    public <T extends SpecificRecord> Serde<T> getSpecificAvroSerde(boolean isKey) {
-        return Serdes.serdeFrom(getSerializer(isKey), getDeserializer(isKey));
-    }
-
-    private <T> Serializer<T> getSerializer(boolean isKey) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(KafkaAvroDeserializerConfig.AUTO_REGISTER_SCHEMAS, true);
-        map.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "unused");
-        Serializer<T> serializer = (Serializer) new KafkaAvroSerializer(mockSchemaRegistryClient);
-        serializer.configure(map, isKey);
-        return serializer;
-    }
-
-    private <T> Deserializer<T> getDeserializer(boolean key) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, "true");
-        map.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "unused");
-        Deserializer<T> deserializer = (Deserializer) new KafkaAvroDeserializer(mockSchemaRegistryClient);
-        deserializer.configure(map, key);
-        return deserializer;
-    }
 }
