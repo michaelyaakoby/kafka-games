@@ -1,0 +1,54 @@
+@namespace("michael.kafka.games.avro")
+protocol Telemetries {
+
+	record DeviceController {
+		string serial;
+		string type;
+		string site_id;
+	}
+
+	@java-interface("michael.kafka.games.Telemetry")
+	record InverterTelemetry {
+		timestamp_ms timestamp;
+		string device_serial;
+		string device_controller_serial;
+
+		string? site_id;
+		/** Duration in seconds between current measurement and previous of delta kind metrics */
+		@logicalType("duration") long measurement_duration_sec;
+		long energy_since_last_telemetry_wh;
+
+		long active_power_w;
+		long reactive_power_w;
+		long voltage_v;
+		long current_a;
+	}
+
+	@java-interface("michael.kafka.games.Telemetry")
+	record IrradianceSensorTelemetry {
+		timestamp_ms timestamp;
+		string device_serial;
+		string device_controller_serial;
+
+		string? site_id;
+		/** Duration in seconds between current measurement and previous of delta kind metrics */
+		@logicalType("duration") long measurement_duration_sec;
+
+		float irradiance_wh_m2;
+	}
+
+	@java-interface("michael.kafka.games.Telemetry")
+	record WindSensorTelemetry {
+		timestamp_ms timestamp;
+		string device_serial;
+		string device_controller_serial;
+
+		string? site_id;
+		/** Duration in seconds between current measurement and previous of delta kind metrics */
+		@logicalType("duration") long measurement_duration_sec;
+
+		float wind_speed_m_s;
+		float wind_direction;
+	}
+
+}

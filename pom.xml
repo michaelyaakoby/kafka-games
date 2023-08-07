@@ -19,7 +19,7 @@
 
         <kafka.version>3.5.1</kafka.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <avro.version>1.11.0</avro.version>
+        <avro.version>1.11.2</avro.version>
     </properties>
 
     <dependencies>
@@ -133,8 +133,18 @@
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
                 <version>${avro.version}</version>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.sabomichal</groupId>
+                        <artifactId>avro-compiler-extension</artifactId>
+                        <version>0.1</version>
+                    </dependency>
+                </dependencies>
+
                 <executions>
                     <execution>
+                        <id>generate-avro-schema</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>schema</goal>
@@ -142,19 +152,28 @@
                         <configuration>
                             <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
                             <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-<!--                            <testSourceDirectory>${project.basedir}/src/main/myavro/</testSourceDirectory>-->
-<!--                            <testOutputDirectory>${project.basedir}/src/test/java/</testOutputDirectory>-->
                             <fieldVisibility>PRIVATE</fieldVisibility>
                             <includes>
                                 <include>**/*.avsc</include>
                             </includes>
-                            <testIncludes>
-<!--                                <testInclude>**/*.test</testInclude>-->
-                            </testIncludes>
                         </configuration>
                     </execution>
+
+                    <execution>
+                        <!-- Generate java POJOs from IDL protocol files -->
+                        <goals>
+                            <goal>idl-protocol</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+                            <templateDirectory>${project.basedir}/src/main/avro/velocity/</templateDirectory>
+                            <velocityToolsClassesNames>com.github.sabomichal.avroextensions.AvroGeneratorExtensions</velocityToolsClassesNames>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 

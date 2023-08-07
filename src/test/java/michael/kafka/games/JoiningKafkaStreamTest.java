@@ -1,13 +1,13 @@
 package michael.kafka.games;
 
-import michael.kafka.games.avro.ApplianceOrder;
-import michael.kafka.games.avro.CombinedOrder;
-import michael.kafka.games.avro.ElectronicOrder;
-import michael.kafka.games.avro.User;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import michael.kafka.games.avro.ApplianceOrder;
+import michael.kafka.games.avro.CombinedOrder;
+import michael.kafka.games.avro.ElectronicOrder;
+import michael.kafka.games.avro.User;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
