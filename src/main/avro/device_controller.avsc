@@ -1,0 +1,10 @@
+{
+  "namespace": "michael.kafka.games.avro",
+  "type": "record",
+  "name": "DeviceController",
+  "fields": [
+    {"name": "serial", "type": "string"},
+    {"name": "type", "type": "string"},
+    {"name": "site_id", "type": "string"}
+  ]
+}

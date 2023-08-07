@@ -1,6 +1,5 @@
 package michael.kafka.games;
 
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import lombok.SneakyThrows;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;

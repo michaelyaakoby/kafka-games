@@ -1,0 +1,16 @@
+{
+  "namespace": "michael.kafka.games.avro",
+  "type": "record",
+  "name": "IrradianceSensorTelemetry",
+  "fields": [
+    {"name": "timestamp", "type": {"type": "long", "logicalType": "timestamp-millis", "doc": "Measurement time reported by the device (represented as millis sice epoch"}},
+    {"name": "device_serial", "type": "string"},
+    {"name": "device_controller_serial", "type": "string"},
+
+    {"name": "site_id", "type": ["null", "string"]},
+
+    {"name": "measurement_duration_sec", "type": {"type": "long", "logicalType": "duration"}, "doc": "Duration in seconds between current measurement and previous of delta kind metrics"},
+
+    {"name": "irradiance_wh_m2", "type": "float"}
+  ]
+}
