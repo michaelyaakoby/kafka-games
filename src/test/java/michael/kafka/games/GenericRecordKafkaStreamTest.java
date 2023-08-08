@@ -33,8 +33,8 @@ public class GenericRecordKafkaStreamTest extends KafkaTestBase {
 
         adminCreateTopics(INPUT_TOPIC, OUTPUT_TOPIC);
 
-        Serde<DeviceController> deviceControllerSerde = getSpecificAvroSerde(mockSchemaRegistryClient, false);
-        Serde<Telemetry> telemetrySerde = getSpecificAvroSerde(mockSchemaRegistryClient, false);
+        Serde<DeviceController> deviceControllerSerde = getSpecificAvroSerde(mockSchemaRegistryClient);
+        Serde<Telemetry> telemetrySerde = getSpecificAvroSerde(mockSchemaRegistryClient);
 
         TelemetrySiteEnricher telemetrySiteEnricher = new TelemetrySiteEnricher(
             mockSchemaRegistryClient,

@@ -4,6 +4,8 @@ import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import io.confluent.kafka.serializers.subject.RecordNameStrategy;
 import lombok.Getter;
 import michael.kafka.games.avro.DeviceController;
 import org.apache.avro.specific.SpecificRecord;
@@ -31,8 +33,8 @@ public class TelemetrySiteEnricher {
         String telemetriesOutputTopic,
         String deviceControllerTableTopic
     ) {
-        Serde<DeviceController> deviceControllerSerde = getSpecificAvroSerde(schemaRegistryClient, false);
-        Serde<Telemetry> telemetrySerde = getSpecificAvroSerde(schemaRegistryClient, false);
+        Serde<DeviceController> deviceControllerSerde = getSpecificAvroSerde(schemaRegistryClient);
+        Serde<Telemetry> telemetrySerde = getSpecificAvroSerde(schemaRegistryClient);
 
         final StreamsBuilder builder = new StreamsBuilder();
 
@@ -58,26 +60,8 @@ public class TelemetrySiteEnricher {
         topology = builder.build();
     }
 
-    public static <T extends SpecificRecord> Serde<T> getSpecificAvroSerde(SchemaRegistryClient schemaRegistryClient, boolean isKey) {
-        return Serdes.serdeFrom(getSerializer(schemaRegistryClient, isKey), getDeserializer(schemaRegistryClient, isKey));
-    }
-
-    public static <T> Serializer<T> getSerializer(SchemaRegistryClient schemaRegistryClient, boolean isKey) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(KafkaAvroDeserializerConfig.AUTO_REGISTER_SCHEMAS, true);
-        map.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "unused");
-        Serializer<T> serializer = (Serializer) new KafkaAvroSerializer(schemaRegistryClient);
-        serializer.configure(map, isKey);
-        return serializer;
-    }
-
-    public static <T> Deserializer<T> getDeserializer(SchemaRegistryClient schemaRegistryClient, boolean key) {
-        Map<String, Object> map = new HashMap<>();
-        map.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, "true");
-        map.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, "unused");
-        Deserializer<T> deserializer = (Deserializer) new KafkaAvroDeserializer(schemaRegistryClient);
-        deserializer.configure(map, key);
-        return deserializer;
+    public static <T extends SpecificRecord> Serde<T> getSpecificAvroSerde(SchemaRegistryClient schemaRegistryClient) {
+        return (Serde<T>) new TelemetrySerde(schemaRegistryClient);
     }
 
 }
